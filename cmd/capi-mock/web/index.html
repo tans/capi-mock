@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="capi-mock 接口说明：用固定响应测试大模型、图片、视频和决策模型接入。">
+  <title>capi-mock · Agent 测试手册</title>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css">
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style>
+    :root { color-scheme: light; }
+    body { background: #f5f7fb; }
+    code, pre { font-variant-ligatures: none; }
+    pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+    .reading { max-width: 72ch; }
+  </style>
+</head>
+<body class="min-h-screen bg-base-200 text-base-content">
+  <header class="border-b border-base-300 bg-base-100">
+    <div class="navbar mx-auto max-w-6xl px-5">
+      <a class="btn btn-ghost text-lg font-semibold" href="#top">capi-mock</a>
+      <div class="ml-auto flex items-center gap-2">
+        <span class="badge badge-success badge-outline">在线模拟服务</span>
+        <a class="btn btn-sm btn-outline" href="https://github.com/tans/capi-mock">GitHub</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="top" class="mx-auto max-w-6xl px-5 pb-20">
+    <section class="hero py-14 md:py-20">
+      <div class="hero-content w-full justify-start px-0">
+        <div class="reading">
+          <h1 class="text-4xl font-bold tracking-tight md:text-6xl">让 Agent 先把接口跑通。</h1>
+          <p class="mt-5 text-lg leading-8 text-base-content/70">capi-mock 提供固定、可重复的模型响应。用它验证 CAPI 的渠道配置、请求格式、流式输出和异步任务轮询，无需真实模型账号或产生模型调用费用。</p>
+          <div class="mt-7 flex flex-wrap gap-3">
+            <a class="btn btn-primary" href="#quickstart">开始测试</a>
+            <a class="btn btn-outline" href="#endpoints">查看接口清单</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="quickstart" class="scroll-mt-8">
+      <div class="mb-5 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 class="text-2xl font-semibold">快速开始</h2>
+          <p class="mt-2 text-base-content/65">全部模型接口使用 Bearer Token。先复制这段请求验证连通性。</p>
+        </div>
+        <button class="btn btn-sm btn-outline" data-copy="quickstart-code">复制命令</button>
+      </div>
+      <div class="mockup-code overflow-x-auto"><pre id="quickstart-code" data-prefix="$"><code>curl https://capi-mock.minapp.xin/v1/models \
+  -H 'Authorization: Bearer mock-key'</code></pre></div>
+      <div class="alert mt-4 border border-base-300 bg-base-100">
+        <span><strong>配置 CAPI 渠道：</strong>Base URL 填 <code>https://capi-mock.minapp.xin/v1</code>，API Key 填 <code>mock-key</code>。测试模型可填 <code>mock-chat</code>、<code>mock-reasoning</code>、<code>mock-image</code> 或 <code>mock-video</code>。</span>
+      </div>
+    </section>
+
+    <section class="mt-14" aria-labelledby="chat-title">
+      <div class="mb-5 flex flex-wrap items-end justify-between gap-3">
+        <div><h2 id="chat-title" class="text-2xl font-semibold">对话与流式输出</h2><p class="mt-2 text-base-content/65">OpenAI Chat Completions。流式请求把 <code>stream</code> 设为 <code>true</code>，使用 <code>curl -N</code> 查看 SSE。</p></div>
+        <button class="btn btn-sm btn-outline" data-copy="chat-code">复制命令</button>
+      </div>
+      <div class="mockup-code overflow-x-auto"><pre id="chat-code"><code>curl https://capi-mock.minapp.xin/v1/chat/completions \
+  -H 'Authorization: Bearer mock-key' \
+  -H 'Content-Type: application/json' \
+  -d '{"model":"mock-chat","messages":[{"role":"user","content":"你好"}]}'</code></pre></div>
+      <p class="mt-3 text-sm text-base-content/65">同一固定回复也支持 <code>/v1/responses</code>、Anthropic <code>/v1/messages</code> 与 Gemini <code>/v1beta/models/{model}:generateContent</code>。</p>
+    </section>
+
+    <section id="endpoints" class="mt-14 scroll-mt-8">
+      <h2 class="text-2xl font-semibold">按场景测试</h2>
+      <p class="mt-2 text-base-content/65">复制任一示例运行。所有示例使用默认密钥 <code>mock-key</code>。</p>
+
+      <div class="mt-6 space-y-4">
+        <details class="collapse collapse-arrow border border-base-300 bg-base-100" open>
+          <summary class="collapse-title text-lg font-medium">图片生成</summary>
+          <div class="collapse-content">
+            <p class="mb-3 text-sm text-base-content/65">接口返回仓库内小样图 <code>deno.png</code> 的 Base64；也可直接请求图片 URL。</p>
+            <div class="mockup-code overflow-x-auto"><pre id="image-code"><code>curl https://capi-mock.minapp.xin/v1/images/generations \
+  -H 'Authorization: Bearer mock-key' -H 'Content-Type: application/json' \
+  -d '{"model":"mock-image","prompt":"一只水豚"}'
+
+curl https://capi-mock.minapp.xin/assets/deno.png \
+  -H 'Authorization: Bearer mock-key' -o deno.png</code></pre></div>
+            <button class="btn btn-xs btn-outline mt-3" data-copy="image-code">复制命令</button>
+          </div>
+        </details>
+
+        <details class="collapse collapse-arrow border border-base-300 bg-base-100">
+          <summary class="collapse-title text-lg font-medium">决策模型（SystemOne）</summary>
+          <div class="collapse-content">
+            <p class="mb-3 text-sm text-base-content/65">返回确定的 boolean、noul、string 与 number 答案，可用于联调决策数据解析。</p>
+            <div class="mockup-code overflow-x-auto"><pre id="decision-code"><code>curl https://capi-mock.minapp.xin/v1/systemone \
+  -H 'Authorization: Bearer mock-key' -H 'Content-Type: application/json' \
+  -d '{"model":"typesafe-ai/jev","questions":{"q1":{"type":"boolean"},"q2":{"type":"noul"},"q3":{"type":"string"},"q4":{"type":"number"}}}'</code></pre></div>
+            <button class="btn btn-xs btn-outline mt-3" data-copy="decision-code">复制命令</button>
+          </div>
+        </details>
+
+        <details class="collapse collapse-arrow border border-base-300 bg-base-100">
+          <summary class="collapse-title text-lg font-medium">视频生成与轮询</summary>
+          <div class="collapse-content">
+            <p class="mb-3 text-sm text-base-content/65">提交任务后按返回的 ID 查询；默认前两次为处理中，随后成功并返回 <code>demo_url</code>。</p>
+            <div class="mockup-code overflow-x-auto"><pre id="video-code"><code># 1. 提交，记录响应里的 id
+curl https://capi-mock.minapp.xin/v1/videos \
+  -H 'Authorization: Bearer mock-key' -H 'Content-Type: application/json' \
+  -d '{"model":"mock-video","prompt":"海边日落"}'
+
+# 2. 将任务 ID 替换成上一步返回的 id，重复请求直到 status=succeeded
+curl https://capi-mock.minapp.xin/v1/tasks/mock_video_1 \
+  -H 'Authorization: Bearer mock-key'
+
+# 3. 成功后下载响应 demo_url 指向的视频
+curl https://capi-mock.minapp.xin/assets/demo.mp4 \
+  -H 'Authorization: Bearer mock-key' -o demo.mp4</code></pre></div>
+            <button class="btn btn-xs btn-outline mt-3" data-copy="video-code">复制命令</button>
+          </div>
+        </details>
+
+        <details class="collapse collapse-arrow border border-base-300 bg-base-100">
+          <summary class="collapse-title text-lg font-medium">错误处理与健康检查</summary>
+          <div class="collapse-content">
+            <p class="mb-3 text-sm text-base-content/65">通过 <code>X-Mock-Status</code> 注入 HTTP 400–599 错误；健康检查无需鉴权。</p>
+            <div class="mockup-code overflow-x-auto"><pre id="error-code"><code>curl https://capi-mock.minapp.xin/v1/chat/completions \
+  -H 'Authorization: Bearer mock-key' -H 'X-Mock-Status: 429' \
+  -H 'Content-Type: application/json' \
+  -d '{"model":"mock-chat","messages":[]}'
+
+curl https://capi-mock.minapp.xin/healthz</code></pre></div>
+            <button class="btn btn-xs btn-outline mt-3" data-copy="error-code">复制命令</button>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section class="mt-14 border-t border-base-300 pt-8">
+      <h2 class="text-2xl font-semibold">Agent 使用约定</h2>
+      <ul class="mt-4 list-disc space-y-2 pl-6 leading-7 text-base-content/75">
+        <li>测试 CAPI 时，将渠道 Base URL 设为本页地址加 <code>/v1</code>，并使用示例 API Key。</li>
+        <li>先查 <code>GET /v1/models</code>，再用对应模型 ID 调用能力接口。</li>
+        <li>视频是异步任务：保存提交响应的任务 ID 并轮询任务状态；成功后再取 <code>demo_url</code>。</li>
+        <li>响应为固定模拟数据，用于验证接入流程，不代表真实模型质量或生成结果。</li>
+      </ul>
+      <p class="mt-8 text-sm text-base-content/55">健康状态：<a class="link" href="/healthz">/healthz</a> · 源码：<a class="link" href="https://github.com/tans/capi-mock">tans/capi-mock</a></p>
+    </section>
+  </main>
+  <div id="copy-toast" class="toast toast-end toast-bottom hidden"><div class="alert alert-success"><span>命令已复制</span></div></div>
+  <script>
+    document.querySelectorAll('[data-copy]').forEach((button) => {
+      button.addEventListener('click', async () => {
+        const source = document.getElementById(button.dataset.copy);
+        await navigator.clipboard.writeText(source.innerText);
+        const toast = document.getElementById('copy-toast');
+        toast.classList.remove('hidden');
+        window.setTimeout(() => toast.classList.add('hidden'), 1800);
+      });
+    });
+  </script>
+</body>
+</html>

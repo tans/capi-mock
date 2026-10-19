@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-//go:embed assets/deno.png assets/demo.mp4
+//go:embed assets/deno.png assets/demo.mp4 web/index.html
 var fixtures embed.FS
 var version = "dev"
 
@@ -35,6 +35,16 @@ func main() {
 }
 
 func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path == "/" && r.Method == http.MethodGet {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		page, err := fixtures.ReadFile("web/index.html")
+		if err != nil {
+			http.Error(w, "homepage unavailable", http.StatusInternalServerError)
+			return
+		}
+		_, _ = w.Write(page)
+		return
+	}
 	if r.URL.Path == "/healthz" && r.Method == http.MethodGet {
 		writeJSON(w, 200, map[string]string{"status": "ok", "version": version})
 		return
