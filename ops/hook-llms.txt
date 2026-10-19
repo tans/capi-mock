@@ -1,0 +1,34 @@
+# hook.minapp.xin
+
+This host runs `adnanh/webhook` as a fixed-command deployment trigger. Every
+deployment accepts one full 40-character lowercase commit SHA and verifies it
+is reachable from the corresponding repository's `origin/main` before building.
+
+## CAPI Mock
+
+- Endpoint: `POST https://hook.minapp.xin/hooks/capi-mock`
+- Authentication: required `X-Deploy-Token` header.
+- Request body: JSON containing `sha`.
+- Repository: `https://github.com/tans/capi-mock`, branch `main`.
+- Dispatcher: `/data/capi-mock/dispatch.sh`.
+- Deployment: `/data/capi-mock/deploy.sh` builds a static Linux release, restarts
+  `capi-mock.service`, checks `http://127.0.0.1:3221/healthz`, and rolls back if
+  activation or health verification fails.
+- Active revision: `/data/capi-mock/DEPLOYED_COMMIT`.
+- Public health endpoint: `https://capi-mock.minapp.xin/healthz`.
+
+Pushes to GitHub `main` call this endpoint through the repository's
+`CAPI_MOCK_DEPLOY_TOKEN` Actions secret.
+
+## Jack Cases
+
+- Endpoint: `POST https://hook.minapp.xin/hooks/jack-cases`
+- Authentication: required `X-Deploy-Token` header.
+- Request body: JSON containing `sha`.
+- Repository: `https://github.com/tans/jack-cases`, branch `main`.
+- Dispatcher: `/data/jack-cases/dispatch.sh`.
+- Deployment: `/data/jack-cases/deploy.sh`.
+- Public health endpoint: `https://jack-cases.minapp.xin/api/health`.
+
+Each hook invokes only its fixed dispatcher. Do not pass arbitrary commands or
+other request fields to shell commands.

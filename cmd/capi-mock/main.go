@@ -29,7 +29,7 @@ type server struct {
 func main() {
 	s := &server{key: env("CAPI_MOCK_API_KEY", "mock-key"), videoPolls: intEnv("CAPI_MOCK_VIDEO_POLLS", 2), videos: make(map[string]int)}
 	addr := env("CAPI_MOCK_ADDR", "127.0.0.1:3221")
-	log.Printf("capi-mock listening on http://%s (key=%s)", addr, s.key)
+	log.Printf("capi-mock listening on http://%s", addr)
 	log.Fatal(http.ListenAndServe(addr, s))
 }
 

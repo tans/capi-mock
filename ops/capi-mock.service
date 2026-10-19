@@ -1,0 +1,26 @@
+[Unit]
+Description=CAPI mock upstream API
+After=network.target
+
+[Service]
+Type=simple
+User=capi-mock
+Group=capi-mock
+WorkingDirectory=/data/capi-mock/current
+Environment=CAPI_MOCK_ADDR=127.0.0.1:3221
+Environment=CAPI_MOCK_API_KEY=mock-key
+Environment=CAPI_MOCK_VIDEO_POLLS=2
+ExecStart=/data/capi-mock/current/capi-mock
+Restart=on-failure
+RestartSec=2
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+LockPersonality=true
+RestrictSUIDSGID=true
+
+[Install]
+WantedBy=multi-user.target

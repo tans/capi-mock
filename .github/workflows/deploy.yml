@@ -1,0 +1,28 @@
+name: Deploy capi-mock
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: capi-mock-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger fixed production deployment
+        env:
+          DEPLOY_TOKEN: ${{ secrets.CAPI_MOCK_DEPLOY_TOKEN }}
+        run: |
+          test -n "$DEPLOY_TOKEN"
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header 'Content-Type: application/json' \
+            --header "X-Deploy-Token: $DEPLOY_TOKEN" \
+            --data "{\"sha\":\"$GITHUB_SHA\"}" \
+            https://hook.minapp.xin/hooks/capi-mock
