@@ -17,6 +17,7 @@ import (
 
 //go:embed assets/deno.png assets/demo.mp4
 var fixtures embed.FS
+var version = "dev"
 
 type server struct {
 	key        string
@@ -35,7 +36,7 @@ func main() {
 
 func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/healthz" && r.Method == http.MethodGet {
-		writeJSON(w, 200, map[string]string{"status": "ok"})
+		writeJSON(w, 200, map[string]string{"status": "ok", "version": version})
 		return
 	}
 	if !s.authorized(r) {

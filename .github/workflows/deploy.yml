@@ -15,6 +15,29 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build Linux release
+        env:
+          RELEASE_SHA: ${{ github.sha }}
+        run: CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w -X main.version=$RELEASE_SHA" -o capi-mock ./cmd/capi-mock
+
+      - name: Upload release through restricted SSH key
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.CAPI_MOCK_DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.CAPI_MOCK_DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -d -m 0700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 0600 ~/.ssh/id_ed25519 ~/.ssh/known_hosts
+          ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes -o BatchMode=yes \
+            capi-mock-upload@81.69.220.28 "upload $GITHUB_SHA" < ./capi-mock
+
       - name: Trigger fixed production deployment
         env:
           DEPLOY_TOKEN: ${{ secrets.CAPI_MOCK_DEPLOY_TOKEN }}

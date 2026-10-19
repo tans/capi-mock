@@ -11,9 +11,11 @@ is reachable from the corresponding repository's `origin/main` before building.
 - Request body: JSON containing `sha`.
 - Repository: `https://github.com/tans/capi-mock`, branch `main`.
 - Dispatcher: `/data/capi-mock/dispatch.sh`.
-- Deployment: `/data/capi-mock/deploy.sh` builds a static Linux release, restarts
-  `capi-mock.service`, checks `http://127.0.0.1:3221/healthz`, and rolls back if
-  activation or health verification fails.
+- Release upload: GitHub Actions builds a static Linux binary and sends it through
+  a restricted SSH key to `/data/capi-mock/incoming`.
+- Deployment: `/data/capi-mock/deploy.sh` activates the uploaded binary, restarts
+  `capi-mock.service`, checks the health response and embedded commit SHA, and
+  rolls back if activation or verification fails.
 - Active revision: `/data/capi-mock/DEPLOYED_COMMIT`.
 - Public health endpoint: `https://capi-mock.minapp.xin/healthz`.
 

@@ -30,4 +30,4 @@ go run ./cmd/capi-mock
 
 样例文件很小：`cmd/capi-mock/assets/deno.png` 为 256×256 PNG，`cmd/capi-mock/assets/demo.mp4` 为 320×180、2 秒的 MP4。服务通过 Go embed 内嵌这两个文件，运行时不依赖额外路径；图片生成接口返回 PNG 的 Base64，视频任务完成后响应会带 `demo_url`。
 
-推送 `main` 会通过 GitHub Actions 调用 `https://hook.minapp.xin/hooks/capi-mock` 自动部署；仓库需要配置 `CAPI_MOCK_DEPLOY_TOKEN` Actions secret。部署脚本和 systemd/Nginx 配置模板位于 `ops/`。
+推送 `main` 会由 GitHub Actions 构建 Linux 二进制，通过受限 SSH 密钥上传，再调用 `https://hook.minapp.xin/hooks/capi-mock` 激活部署。仓库需要配置 `CAPI_MOCK_DEPLOY_TOKEN`、`CAPI_MOCK_DEPLOY_SSH_KEY` 和 `CAPI_MOCK_DEPLOY_KNOWN_HOSTS` Actions secrets。部署脚本和 systemd/Nginx 配置模板位于 `ops/`。
