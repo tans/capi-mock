@@ -1,13 +1,10 @@
 package main
 
 import (
-	"bytes"
+	"embed"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"image"
-	"image/color"
-	"image/png"
 	"log"
 	"net/http"
 	"os"
@@ -17,6 +14,9 @@ import (
 	"sync/atomic"
 	"time"
 )
+
+//go:embed assets/deno.png assets/demo.mp4
+var fixtures embed.FS
 
 type server struct {
 	key        string
@@ -51,6 +51,10 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 200, map[string]any{"object": "list", "data": []any{
 			model("mock-chat"), model("mock-reasoning"), model("mock-image"), model("mock-video"), model("typesafe-ai/jev"),
 		}})
+	case r.Method == "GET" && r.URL.Path == "/assets/deno.png":
+		s.fixture(w, "assets/deno.png", "image/png")
+	case r.Method == "GET" && r.URL.Path == "/assets/demo.mp4":
+		s.fixture(w, "assets/demo.mp4", "video/mp4")
 	case r.Method == "POST" && r.URL.Path == "/v1/chat/completions":
 		s.chat(w, r)
 	case r.Method == "POST" && r.URL.Path == "/v1/responses":
@@ -167,10 +171,8 @@ func (s *server) image(w http.ResponseWriter, r *http.Request) {
 	if !decode(w, r, &in) {
 		return
 	}
-	// A generated 1x1 PNG is enough to exercise image response parsing without provider traffic.
-	var buf bytes.Buffer
-	_ = png.Encode(&buf, image.NewUniform(color.RGBA{R: 30, G: 80, B: 180, A: 255}))
-	writeJSON(w, 200, map[string]any{"created": time.Now().Unix(), "data": []any{map[string]string{"b64_json": base64.StdEncoding.EncodeToString(buf.Bytes()), "revised_prompt": in.Prompt}}})
+	img, _ := fixtures.ReadFile("assets/deno.png")
+	writeJSON(w, 200, map[string]any{"created": time.Now().Unix(), "data": []any{map[string]string{"b64_json": base64.StdEncoding.EncodeToString(img), "revised_prompt": in.Prompt}}})
 }
 
 func (s *server) systemOne(w http.ResponseWriter, r *http.Request) {
@@ -230,7 +232,22 @@ func (s *server) pollVideo(w http.ResponseWriter, id string) {
 	if polls > s.videoPolls {
 		status = "succeeded"
 	}
-	writeJSON(w, 200, map[string]any{"id": id, "status": status, "progress": min(polls*100/max(s.videoPolls+1, 1), 100)})
+	result := map[string]any{"id": id, "status": status, "progress": min(polls*100/max(s.videoPolls+1, 1), 100)}
+	if status == "succeeded" {
+		result["demo_url"] = "/assets/demo.mp4"
+	}
+	writeJSON(w, 200, result)
+}
+
+func (s *server) fixture(w http.ResponseWriter, name, contentType string) {
+	data, err := fixtures.ReadFile(name)
+	if err != nil {
+		writeError(w, 404, "not_found", "demo asset not found")
+		return
+	}
+	w.Header().Set("Content-Type", contentType)
+	w.Header().Set("Content-Length", strconv.Itoa(len(data)))
+	_, _ = w.Write(data)
 }
 
 func model(id string) map[string]any {

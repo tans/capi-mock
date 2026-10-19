@@ -18,9 +18,12 @@ go run ./cmd/capi-mock
 - `POST /v1/responses`
 - `POST /v1/messages`（含基础 SSE）
 - `POST /v1beta/models/{model}:generateContent`
-- `POST /v1/images/generations`、`/v1/images/edits`（返回可解码的 1×1 PNG）
+- `POST /v1/images/generations`、`/v1/images/edits`（返回仓库里的 `cmd/capi-mock/assets/deno.png`）
 - `POST /v1/systemone`（处理 boolean/noul、string、number 问题）
-- `POST /v1/videos`、`GET /v1/tasks/{id}`（内存任务，轮询后成功，不生成真实视频）
+- `POST /v1/videos`、`GET /v1/tasks/{id}`（内存任务，轮询后成功，返回样例视频路径）
+- `GET /assets/deno.png`、`GET /assets/demo.mp4`（访问仓库内的样例媒体）
 - `GET /healthz`（无需鉴权）
 
 全部 `/v1` 接口需要 `Authorization: Bearer mock-key`。可通过 `CAPI_MOCK_ADDR`、`CAPI_MOCK_API_KEY`、`CAPI_MOCK_VIDEO_POLLS`、`CAPI_MOCK_CONFIDENCE`、`CAPI_MOCK_CHAT_TEXT` 配置监听地址、密钥、视频成功前的轮询次数、决策置信度和固定文本。请求带 `X-Mock-Status: 429`（或 400–599）可模拟上游错误。
+
+样例文件很小：`cmd/capi-mock/assets/deno.png` 为 256×256 PNG，`cmd/capi-mock/assets/demo.mp4` 为 320×180、2 秒的 MP4。服务通过 Go embed 内嵌这两个文件，运行时不依赖额外路径；图片生成接口返回 PNG 的 Base64，视频任务完成后响应会带 `demo_url`。
